@@ -33,12 +33,12 @@ void cal(void);//结算功能的实现
 
 void cal(void)
 {
-    float total = 0,pay;
+    float total = 0,pay=0;
     Scart *p;
     FILE *fp;
     printf("以下是购物清单：\n");
     display();//显示购物车内容
-    if((fp = fopen("goods","r")) == NULL)
+    if((fp = fopen("goods","rb")) == NULL)
     {
         printf("文件打开失败！\n");
         return;
@@ -58,9 +58,9 @@ void cal(void)
     }
     printf("总计：%7.2f\n",total);
     printf("\n输入支付的金额:");
-    scanf("%d",&pay);
+    scanf("%f",&pay);
     printf("实际支付：%7.2f\t\t 找零：%7.2f\n",pay,pay-total);
-    if((fp = fopen("goods","w")) == NULL)
+    if((fp = fopen("goods","wb")) == NULL)
     {
         printf("文件打开失败！\n");
         return;
@@ -168,6 +168,7 @@ int cart_menu(void)
     }
 }
 //add 有点小问题 会吞字符
+//已改好 通过清空输入缓冲区的办法解决
 void add(void)
 {
     FILE *fp;
@@ -176,12 +177,14 @@ void add(void)
     int n;//顾客想要商品的数量
     char choice,choice2;
     Scart *p,*p1;
+    int ch;
     do
     {
         printf("请输入所需物品的名称或者编号：");
-        fflush(stdin);
-        scanf("%s",str);
-        //gets(str);
+        //fflush(stdin);
+        //scanf("%s",str);
+        while ((ch = getchar()) != '\n' && ch != EOF);
+        gets(str);
         if((fp = fopen("goods","r")) == NULL)
         {
             printf("打开文件失败！\n");
@@ -202,11 +205,12 @@ void add(void)
                     printf("库存不足！");
                     break;
                 }
-                // printf("是否添加进购物车?(Y/N):\n");
-                // fflush(stdin);
-                // choice = getchar();
-                // if(choice == 'Y'||choice == 'y')
-                // {
+                printf("是否添加进购物车?(Y/N):\n");
+                while ((ch = getchar()) != '\n' && ch != EOF);
+                //fflush(stdin);
+                choice = getchar();
+                if(choice == 'Y'||choice == 'y')
+                {
                     p1 = (Scart*)malloc(sizeof(Scart));
                     if(p1==NULL) printf("内存申请失败");
                     p1->amount = n;
@@ -221,7 +225,7 @@ void add(void)
                         p1->next = p->next;
                         p->next = p1;
                     }
-                // }
+                }
                 break;
             }
         }
@@ -231,9 +235,10 @@ void add(void)
         }
         fclose(fp);
         printf("是否继续购物?(Y/N):\n");
-        fflush(stdin);
-        //choice2 = getchar();
-        scanf("%c",&choice2);
+        // fflush(stdin);
+        while ((ch = getchar()) != '\n' && ch != EOF);
+        choice2 = getchar();
+        //scanf("%c",&choice2);
     } while (choice2 == 'Y' || choice2 == 'y');
     
 }
@@ -274,7 +279,7 @@ void display(void)
     {
         printf("-----------------------------\n");
         printf("编号\t名字\t单价\t数量\n");
-        printf("%s%11s%9.2f%9d\n",p->wanted.id,p->wanted.brand,p->wanted.out_price,p->amount);
+        printf("%s%11s%9.2f%7d\n",p->wanted.id,p->wanted.brand,p->wanted.out_price,p->amount);
         p=p->next;
     }
 }
